@@ -56,7 +56,7 @@ def text_generation():
         number_of_new_words = number_of_word + number_of_new_words
 
         with open("data_stage_1_new_file.txt", "a") as file:
-            file.write(output + '\n')
+            file.write(output + '.\n')
 
         if number_of_new_words >= 2000:
             sentences_more = False
