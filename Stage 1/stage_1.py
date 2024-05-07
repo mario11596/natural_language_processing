@@ -97,7 +97,7 @@ def text_generation_llm():
     final_text = ""
     for line in output["choices"][0]["text"].splitlines():
         #print(line)
-        if line is not "":
+        if line != "":
             line = re.sub("[^a-zA-Z ]", "", line)
             line = _RE_COMBINE_WHITESPACE.sub(" ", line).strip()
             final_text += line + '.\n'
@@ -125,7 +125,7 @@ def text_style_change():
     #llm = Llama(model_path="../model/llama-2-7b.Q5_K_M.gguf", n_ctx=2048, n_gpu_layers=32)
     
     system = "You are a helpful assistant pretending to be Spongebob Squarepants. "
-    question = "Question: Can you repeat the following text but in the text-style of Spongebob Squarepants. Write at least 2000 words: " + contents[-1800:]
+    question = "Question: Can you repeat the following text but in the text-style of Spongebob Squarepants. Write at least 2000 words without emojis: " + contents[-1800:]
     prompt = f"""<s>[INST] <<SYS>>{system}<</SYS>>{question} [/INST]"""
     
     #question = contents[-1800:] + "Now follows the same text but in the style of spongebob squarepants: "
@@ -160,7 +160,7 @@ def text_style_change():
 
 def main():
     #text_generation()
-    text_generation_llm()
+    #text_generation_llm()
     text_style_change()
 
 if __name__ == '__main__':
