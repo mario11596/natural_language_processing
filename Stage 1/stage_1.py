@@ -2,8 +2,11 @@ import nltk
 import random
 import re
 import os
+from rouge_score import rouge_scorer, scoring
+from nltk.translate.bleu_score import corpus_bleu
+from nltk.tokenize import word_tokenize
 
-from llama_cpp import Llama
+#from llama_cpp import Llama
 _RE_COMBINE_WHITESPACE = re.compile(r"\s+")
 
 def text_cleaner(text):
@@ -119,7 +122,7 @@ def text_style_change():
         #contents = file.readlines()
         contents = file.read()
     file.close()
-    
+
     #llm = Llama(model_path="../model/llama-2-7b.Q8_0.gguf", n_ctx=0, n_gpu_layers=32)
     llm = Llama(model_path="../model/llama-2-7b-chat.Q8_0.gguf", n_ctx=0, n_gpu_layers=32)
     #llm = Llama(model_path="../model/llama-2-7b.Q5_K_M.gguf", n_ctx=2048, n_gpu_layers=32)
@@ -154,14 +157,44 @@ def text_style_change():
 
     #        with open("data_stage_1_new_style.txt", "a") as file:
     #            file.write(output["choices"][0]["text"])
-    #    
+    #
     #        text = ""
     return
 
+def read_file(file_path):
+    with open(file_path, 'r', encoding='utf-8') as file:
+        text = file.read()
+    return text
+
+def Rouge(ground_true, generated_text):
+    scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
+
+    scores = scorer.score(ground_true, generated_text)
+
+    print(scores)
+
+def Bleu(ground_true, generated_text):
+    ground_true = word_tokenize(ground_true.lower())
+    generated_text = word_tokenize(generated_text.lower())
+    bleu_score = corpus_bleu([[ground_true]], [generated_text])
+
+    print("BLEU Score:", bleu_score)
+
+
+def text_evaluation():
+    ground_true = read_file('data_stage_1.txt')
+    generated_text = read_file('../hand_in/group16_stage1_generation_nollm.txt')
+
+    Rouge(ground_true, generated_text)
+
+    Bleu(ground_true, generated_text)
+
+
 def main():
-    #text_generation()
+    text_generation()
     #text_generation_llm()
     text_style_change()
+    text_evaluation()
 
 if __name__ == '__main__':
     main()
