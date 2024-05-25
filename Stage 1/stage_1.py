@@ -6,7 +6,7 @@ from rouge_score import rouge_scorer, scoring
 from nltk.translate.bleu_score import corpus_bleu
 from nltk.tokenize import word_tokenize
 
-#from llama_cpp import Llama
+from llama_cpp import Llama
 _RE_COMBINE_WHITESPACE = re.compile(r"\s+")
 
 def text_cleaner(text):
