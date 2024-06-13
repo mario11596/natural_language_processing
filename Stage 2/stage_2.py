@@ -3,7 +3,7 @@ import random
 import re
 import os
 
-#from hmmlearn import hmm
+from hmmlearn import hmm
 import numpy as np
 
 from llama_cpp import Llama
