@@ -32,8 +32,9 @@ def text_generation(input):
         TemperatureLogitsWarper(temperature=0.8),
     ])
 
-    outputs = model.generate(inputs, max_length=150, do_sample=True, num_beams=5, no_repeat_ngram_size=3, early_stopping=True,
-                             num_return_sequences=1,  logits_processor=logits_processor)
+    outputs = model.generate(inputs, max_length=150, do_sample=True, early_stopping=True,
+                             num_return_sequences=1,  logits_processor=logits_processor,top_p=0.98,
+                             top_k=50)
     text = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
     if text.startswith(prompt):
@@ -45,7 +46,7 @@ def text_chat_generation(input, person):
     llm = Llama(model_path="../model/llama-2-7b-chat.Q8_0.gguf", n_ctx=0, n_gpu_layers=32)
 
     system = f"You are {person}."
-    question = f"Question: can you generate a follow-up tweet to the following tweet: " + input + " Write a maximum 280 Characters."
+    question = f"Question: generate a different follow-up tweet to the following tweet without repeating it: " + input + " Write a maximum 200 Characters without repeating the previous tweet."
     prompt = f"""<s>[INST] <<SYS>>{system}<</SYS>>{question} [/INST]"""
     
     output = llm(prompt, max_tokens=2048, temperature=1.0)
@@ -88,24 +89,25 @@ def pipeline():
     trump_tweets = load_tweets('./data/data_stage3_2_trump.xlsx')
     convo = []
 
-    m = text_generation(musk_initial_tweet)
+    #m = text_generation(musk_initial_tweet)
+    m = text_chat_generation(musk_initial_tweet, "Elon Musk")
     convo.append(m)
-    for _ in range(1):
-        print("S--------------------")
+    for _ in range(100):
+        #print("S--------------------")
         t = text_style_change(m, "Donald Trump")
-        print(t)
-        print("--------------------")
-        tt = text_generation(t)
-        #tt = text_chat_generation(t, "Donald Trump")
-        print(tt)
-        print("--------------------")
+        #print(t)
+        #print("--------------------")
+        #tt = text_generation(t)
+        tt = text_chat_generation(t, "Donald Trump")
+        #print(tt)
+        #print("--------------------")
         mt = text_style_change(tt, "Elon Musk")
-        print(mt)
-        print("--------------------")
-        m = text_generation(mt)
-        #m = text_chat_generation(mt, "Elon Musk")
-        print(m)
-        print("--------------------E")
+        #print(mt)
+        #print("--------------------")
+        #m = text_generation(mt)
+        m = text_chat_generation(mt, "Elon Musk")
+        #print(m)
+        #print("--------------------E")
         convo.extend([t, tt, mt, m])
 
     df = pd.DataFrame(data=convo)
