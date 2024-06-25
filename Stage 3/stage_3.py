@@ -19,18 +19,6 @@ def load_tweets(filename):
 
     return array_df
 
-def replace_prompt(x):
-    #print(x.to_string())
-    split_str = x.to_string().split(":")
-    if len(split_str) > 1:
-        print(split_str[0])
-        if "style of" in split_str[0]:
-            #x = pd.Series(":".join(split_str[1:]))
-            #return pd.Series(":".join(split_str[1:]))
-            print(":".join(split_str[1:]))
-    else:
-        return x
-
 def clean_output(filename):
     file_path = "./hand_in/" + filename + ".csv"
     df = pd.read_csv(file_path, sep=",")
