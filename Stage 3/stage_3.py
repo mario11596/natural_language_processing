@@ -2,6 +2,7 @@ import pandas as pd
 import re
 from transformers import GPT2LMHeadModel, GPT2Tokenizer, LogitsProcessorList, MinLengthLogitsProcessor, TemperatureLogitsWarper
 import torch
+import csv
 from llama_cpp import Llama
 
 def load_tweets(filename):
@@ -17,6 +18,25 @@ def load_tweets(filename):
         i = i + 1
 
     return array_df
+
+def replace_prompt(x):
+    #print(x.to_string())
+    split_str = x.to_string().split(":")
+    if len(split_str) > 1:
+        print(split_str[0])
+        if "style of" in split_str[0]:
+            #x = pd.Series(":".join(split_str[1:]))
+            #return pd.Series(":".join(split_str[1:]))
+            print(":".join(split_str[1:]))
+    else:
+        return x
+
+def clean_output(filename):
+    file_path = "./hand_in/" + filename + ".csv"
+    df = pd.read_csv(file_path, sep=",")
+    regex = re.compile(r"[\S\s]*style of Elon Musk[\S\s]*:|[\S\s]*style of Donald Trump[\S\s]*:|[\S\s]*Here's a[\S\s]*:|[\S\s]*in his style[\S\s]*:")
+    df = df.replace(regex, "")
+    df.to_csv("./hand_in/" + filename + "_cleaned.csv", sep=",", index=False)
 
 def text_generation(input):
     prompt = "Tweet: " + input
@@ -84,3 +104,4 @@ def pipeline():
 
 if __name__ == '__main__':
     pipeline()
+    #clean_output("output")
