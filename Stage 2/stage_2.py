@@ -10,13 +10,11 @@ from llama_cpp import Llama
 _RE_COMBINE_WHITESPACE = re.compile(r"\s+")
 
 def text_cleaner(text):
-    #newString = text.lower()
     newString = text.split(":")[1:]
     newString = ''.join(newString)
     newString = re.sub(r"(\(.*?\) )|(\(.*?\))", "", newString)
     newString = re.sub(r"([^\w\s\.\!]\s)", " ", newString)
     newString = re.sub(r"([^\w\s\.\!])", "", newString)
-    #remove numbers
     return newString
 
 def output_cleaner(text):
@@ -53,10 +51,10 @@ def train_hmm_model(tokens, components=2):
     token_idxs = [token_dict[token] for token in tokens]
     X = np.array(token_idxs).reshape(-1,1)
     
-    #model = hmm.CategoricalHMM(n_components=components, n_iter=100)
-    #model = model.fit(X)
+    model = hmm.CategoricalHMM(n_components=components, n_iter=100)
+    model = model.fit(X)
     
-    return idx_dict#, model
+    return idx_dict, model
 
 def text_generation(samples=260):
     contents = {}
@@ -64,12 +62,11 @@ def text_generation(samples=260):
     contents["kickl"] = read_content('data_stage2_2_kickl.txt', 'data_stage_2_generation2.txt')
 
     for iter,text_idx in enumerate(contents):
-        #print(contents[text_idx])
         clean_text = text_cleaner(contents[text_idx])
         tokens = nltk.word_tokenize(clean_text)
         print(len(tokens))
 
-        idx_dict = train_hmm_model(tokens)
+        idx_dict, model = train_hmm_model(tokens)
 
         gen_index = model.sample(n_samples=samples)[0].flatten()
         gen_tokens = [idx_dict[idx] for idx in gen_index]
@@ -88,10 +85,9 @@ def text_style_change():
 
     #https://huggingface.co/TheBloke/leo-hessianai-13B-chat-GGUF
     llm = Llama(model_path="../model/leo-hessianai-13b-chat.Q5_K_M.gguf", n_ctx=0, n_gpu_layers=32)
-    #llm = Llama(model_path="../model/llama-2-7b-chat.Q6_K.gguf", n_ctx=0, n_gpu_layers=32)
 
     for iter,text_idx in enumerate(contents):
-        #system = "You are a Austrian politician {text_idx}. "
+        #system = "You are an Austrian politician {text_idx}. "
         system = f"Du bist der österreichische Politiker {text_idx}."
         #question = "Question: Can you repeat the following text but in german and in the text-style of {text_idx}. Write at least 2000 words without emojis: " + contents1[-1800:]
         question = f"Frage: Kannst du den folgenden Text im stil von {text_idx} wiedergeben. Schreibe bitte mindestens 300 Wörter ohne emojis zu benutzen: " + contents[text_idx][-1800:]
@@ -106,7 +102,7 @@ def text_style_change():
     return
 
 def main():
-    #text_generation(260)
+    text_generation(260)
     text_style_change()
 
 if __name__ == '__main__':

@@ -1,6 +1,5 @@
 import pandas as pd
 import re
-import csv
 from transformers import GPT2LMHeadModel, GPT2Tokenizer, LogitsProcessorList, MinLengthLogitsProcessor, TemperatureLogitsWarper
 import torch
 from llama_cpp import Llama
@@ -20,7 +19,6 @@ def load_tweets(filename):
     return array_df
 
 def text_generation(input):
-    #input = re.sub(r'[\d\W]+$', '', input)
     prompt = "Tweet: " + input
     tokenizer = GPT2Tokenizer.from_pretrained("openai-community/gpt2-large")
     model = GPT2LMHeadModel.from_pretrained('gpt2-large', pad_token_id=tokenizer.eos_token_id)
@@ -39,7 +37,6 @@ def text_generation(input):
 
     if text.startswith(prompt):
         text = text[len(prompt):].strip()
-    #print(text)
     return text
 
 def text_chat_generation(input, person):
@@ -51,30 +48,18 @@ def text_chat_generation(input, person):
     
     output = llm(prompt, max_tokens=2048, temperature=1.0)
     output_text = output["choices"][0]["text"]
-    #print(text)
     return output_text
 
 def text_style_change(input, style):
     person = style
-    #tokenizer = GPT2Tokenizer.from_pretrained("openai-community/gpt2")
-    #model = GPT2LMHeadModel.from_pretrained('gpt2', pad_token_id=tokenizer.eos_token_id)
     llm = Llama(model_path="../model/llama-2-7b-chat.Q8_0.gguf", n_ctx=0, n_gpu_layers=32)
 
     system = f"You are {person}."
     question = f"Question: can you repeat the tweet in the style of {person}. Write a maximum 280 Characters: " + input
     prompt = f"""<s>[INST] <<SYS>>{system}<</SYS>>{question} [/INST]"""
-    
-    #prompt = f"repeat the following words in the style of {person}: " + input
-    #inputs = tokenizer.encode(prompt, return_tensors='pt')
-
-    #logits_processor = LogitsProcessorList([
-    #    MinLengthLogitsProcessor(5, eos_token_id=tokenizer.eos_token_id),
-    #    TemperatureLogitsWarper(temperature=0.7),
-    #])
 
     output = llm(prompt, max_tokens=2048)
     output_text = output["choices"][0]["text"]
-    #print(text)
     return output_text
 
 
@@ -83,31 +68,15 @@ def pipeline():
 
     musk_initial_tweet = file.read()
     file.close()
-
-    # i think this is for style transfer?
-    musk_tweets = load_tweets('./data/data_stage3_1_musk.xlsx')
-    trump_tweets = load_tweets('./data/data_stage3_2_trump.xlsx')
     convo = []
 
-    #m = text_generation(musk_initial_tweet)
     m = text_chat_generation(musk_initial_tweet, "Elon Musk")
     convo.append(m)
     for _ in range(100):
-        #print("S--------------------")
         t = text_style_change(m, "Donald Trump")
-        #print(t)
-        #print("--------------------")
-        #tt = text_generation(t)
         tt = text_chat_generation(t, "Donald Trump")
-        #print(tt)
-        #print("--------------------")
         mt = text_style_change(tt, "Elon Musk")
-        #print(mt)
-        #print("--------------------")
-        #m = text_generation(mt)
         m = text_chat_generation(mt, "Elon Musk")
-        #print(m)
-        #print("--------------------E")
         convo.extend([t, tt, mt, m])
 
     df = pd.DataFrame(data=convo)
