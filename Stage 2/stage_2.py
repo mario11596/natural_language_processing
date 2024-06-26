@@ -1,7 +1,9 @@
 import nltk
-import random
 import re
 import os
+from nltk.tokenize import word_tokenize
+from rouge_score import rouge_scorer
+from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
 
 from hmmlearn import hmm
 import numpy as np
@@ -101,9 +103,102 @@ def text_style_change():
             file.write(style_cleaner(final_text))
     return
 
+
+def read_file(file_path):
+    with open(file_path, 'r', encoding='utf-8') as file:
+        text = file.read()
+    return text
+
+def Rouge(ground_true, generated_text):
+    rogue_scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
+
+    all_scores = rogue_scorer.score(ground_true, generated_text)
+
+    print("ROUGE-1:")
+    print(f"Precision: {round(all_scores['rouge1'].precision, 5)}")
+    print(f"Recall: {round(all_scores['rouge1'].recall, 5)}")
+    print(f"F1 Score: {round(all_scores['rouge1'].fmeasure, 5)}")
+
+    print("\nROUGE-2:")
+    print(f"Precision: {round(all_scores['rouge2'].precision, 5)}")
+    print(f"Recall: {round(all_scores['rouge2'].recall, 5)}")
+    print(f"F1 Score: {round(all_scores['rouge2'].fmeasure, 5)}")
+
+    print("\nROUGE-L:")
+    print(f"Precision: {round(all_scores['rougeL'].precision, 5)}")
+    print(f"Recall: {round(all_scores['rougeL'].recall, 5)}")
+    print(f"F1 Score: {round(all_scores['rougeL'].fmeasure, 5)}")
+
+def Bleu(ground_true, generated_text):
+    ground_true = word_tokenize(ground_true.lower())
+    generated_text = word_tokenize(generated_text.lower())
+    smoothie = SmoothingFunction().method4
+    bleu_score = corpus_bleu([[ground_true]], [generated_text], smoothing_function=smoothie)
+
+    print("BLEU Score: ", round(bleu_score, 5))
+
+
+def text_evaluation():
+    ground_true_1_kogler = read_file('data_stage2_1_kogler.txt')
+    ground_true_2_kickl = read_file('data_stage2_2_kickl.txt')
+
+    generated_text_1 = read_file('./hand_in/group16_stage2_generation1.txt')
+    style_text_1 = read_file('./hand_in/group16_stage2_style1.txt')
+
+    generated_text_2 = read_file('./hand_in/group16_stage2_generation2.txt')
+    style_text_2 = read_file('./hand_in/group16_stage2_style2.txt')
+
+    print("Evaluation for text generation one!")
+    Rouge(ground_true_1_kogler, generated_text_1)
+    Bleu(ground_true_1_kogler, generated_text_1)
+
+    print("Evaluation for style transfer one!")
+    Rouge(ground_true_1_kogler, style_text_2)
+    Bleu(ground_true_1_kogler, style_text_2)
+
+    print("Evaluation for text generation two!")
+    Rouge(ground_true_2_kickl, generated_text_2)
+    Bleu(ground_true_2_kickl, generated_text_2)
+
+    print("Evaluation for style transfer two!")
+    Rouge(ground_true_2_kickl, style_text_1)
+    Bleu(ground_true_2_kickl, style_text_1)
+
+
+def statistics_of_dataset():
+    with open('data_stage2_1_kogler.txt', 'r') as file:
+        contents = file.read()
+    file.close()
+
+    tokens_text = word_tokenize(contents.lower())
+
+    filtered_tokens = [token for token in tokens_text if token.isalpha()]
+
+    number_of_tokens = len(filtered_tokens)
+    vocabulary_size = len(set(filtered_tokens))
+
+    print(f'Number of tokens in original Kogler text: {number_of_tokens}')
+    print(f'Vocabulary size in original Kogler text: {vocabulary_size}')
+
+    with open('data_stage2_2_kickl.txt', 'r') as file:
+        contents = file.read()
+    file.close()
+
+    tokens_text = word_tokenize(contents.lower())
+
+    filtered_tokens = [token for token in tokens_text if token.isalpha()]
+
+    number_of_tokens = len(filtered_tokens)
+    vocabulary_size = len(set(filtered_tokens))
+
+    print(f'Number of tokens in original Kickel text: {number_of_tokens}')
+    print(f'Vocabulary size in original Kickle text: {vocabulary_size}')
+
 def main():
     text_generation(260)
     text_style_change()
+    statistics_of_dataset()
+    text_evaluation()
 
 if __name__ == '__main__':
     main()

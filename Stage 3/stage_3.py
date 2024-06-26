@@ -3,7 +3,7 @@ import re
 from transformers import GPT2LMHeadModel, GPT2Tokenizer, LogitsProcessorList, MinLengthLogitsProcessor, TemperatureLogitsWarper
 import torch
 import csv
-from llama_cpp import Llama
+#from llama_cpp import Llama
 
 def load_tweets(filename):
     file_path = filename

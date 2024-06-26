@@ -2,8 +2,8 @@ import nltk
 import random
 import re
 import os
-from rouge_score import rouge_scorer, scoring
-from nltk.translate.bleu_score import corpus_bleu
+from rouge_score import rouge_scorer
+from nltk.translate.bleu_score import corpus_bleu,SmoothingFunction
 from nltk.tokenize import word_tokenize
 
 from llama_cpp import Llama
@@ -132,33 +132,70 @@ def read_file(file_path):
     return text
 
 def Rouge(ground_true, generated_text):
-    scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
+    rogue_scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
 
-    scores = scorer.score(ground_true, generated_text)
+    all_scores = rogue_scorer.score(ground_true, generated_text)
 
-    print(scores)
+    print("ROUGE-1:")
+    print(f"Precision: {round(all_scores['rouge1'].precision, 5)}")
+    print(f"Recall: {round(all_scores['rouge1'].recall, 5)}")
+    print(f"F1 Score: {round(all_scores['rouge1'].fmeasure, 5)}")
+
+    print("\nROUGE-2:")
+    print(f"Precision: {round(all_scores['rouge2'].precision, 5)}")
+    print(f"Recall: {round(all_scores['rouge2'].recall, 5)}")
+    print(f"F1 Score: {round(all_scores['rouge2'].fmeasure, 5)}")
+
+    print("\nROUGE-L:")
+    print(f"Precision: {round(all_scores['rougeL'].precision, 5)}")
+    print(f"Recall: {round(all_scores['rougeL'].recall, 5)}")
+    print(f"F1 Score: {round(all_scores['rougeL'].fmeasure, 5)}")
 
 def Bleu(ground_true, generated_text):
     ground_true = word_tokenize(ground_true.lower())
     generated_text = word_tokenize(generated_text.lower())
-    bleu_score = corpus_bleu([[ground_true]], [generated_text])
+    smoothie = SmoothingFunction().method4
+    bleu_score = corpus_bleu([[ground_true]], [generated_text], smoothing_function=smoothie)
 
-    print("BLEU Score:", bleu_score)
+    print("BLEU Score: ", bleu_score)
 
 
 def text_evaluation():
     ground_true = read_file('data_stage_1.txt')
-    generated_text = read_file('../hand_in/group16_stage1_generation_nollm.txt')
+    generated_text = read_file('./hand_in/group16_stage1_generation_nollm.txt')
+    style_text = read_file('./hand_in/group16_stage1_style_nollm.txt')
 
+    #ground_true_clean = text_cleaner(ground_true)
+
+    print("Evaluation for text generation!")
     Rouge(ground_true, generated_text)
-
     Bleu(ground_true, generated_text)
 
+    print("Evaluation for style transfer!")
+    Rouge(ground_true, style_text)
+    Bleu(ground_true, style_text)
+
+
+def statistics_of_dataset():
+    with open('data_stage_1.txt', 'r') as file:
+        contents = file.read()
+    file.close()
+
+    tokens_text = word_tokenize(contents.lower())
+
+    filtered_tokens = [token for token in tokens_text if token.isalpha()]
+
+    number_of_tokens = len(filtered_tokens)
+    vocabulary_size = len(set(filtered_tokens))
+
+    print(f'Number of tokens in original text: {number_of_tokens}')
+    print(f'Vocabulary size in original text: {vocabulary_size}')
 
 def main():
     text_generation()
-    #text_generation_llm()
+    text_generation_llm()
     text_style_change()
+    statistics_of_dataset()
     text_evaluation()
 
 if __name__ == '__main__':
