@@ -141,8 +141,8 @@ def Rouge(ground_true, generated_text):
 def Bleu(ground_true, generated_text):
     ground_true = word_tokenize(ground_true.lower())
     generated_text = word_tokenize(generated_text.lower())
-    smoothie = SmoothingFunction().method4
-    bleu_score = corpus_bleu([[ground_true]], [generated_text], smoothing_function=smoothie)
+    smooth_text = SmoothingFunction().method4
+    bleu_score = corpus_bleu([[ground_true]], [generated_text], smoothing_function=smooth_text)
 
     print("BLEU Score: ", bleu_score, 5)
 
@@ -179,7 +179,8 @@ def statistics_of_dataset():
         contents = file.read()
     file.close()
 
-    tokens_text = word_tokenize(contents.lower())
+    lower_content = contents.lower()
+    tokens_text = word_tokenize(lower_content)
 
     filtered_tokens = [token for token in tokens_text if token.isalpha()]
 
@@ -193,7 +194,8 @@ def statistics_of_dataset():
         contents = file.read()
     file.close()
 
-    tokens_text = word_tokenize(contents.lower())
+    lower_content = contents.lower()
+    tokens_text = word_tokenize(lower_content)
 
     filtered_tokens = [token for token in tokens_text if token.isalpha()]
 
