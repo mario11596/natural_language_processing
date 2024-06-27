@@ -144,7 +144,7 @@ def Bleu(ground_true, generated_text):
     smoothie = SmoothingFunction().method4
     bleu_score = corpus_bleu([[ground_true]], [generated_text], smoothing_function=smoothie)
 
-    print("BLEU Score: ", round(bleu_score, 5))
+    print("BLEU Score: ", bleu_score, 5)
 
 
 def text_evaluation():
