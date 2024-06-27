@@ -1,10 +1,9 @@
 import pandas as pd
 import re
 from transformers import GPT2LMHeadModel, GPT2Tokenizer, LogitsProcessorList, MinLengthLogitsProcessor, TemperatureLogitsWarper
-import torch
-import csv
-#from llama_cpp import Llama
+from llama_cpp import Llama
 
+# loading tweets from CSV file
 def load_tweets(filename):
     file_path = filename
     df = pd.read_excel(file_path)
@@ -26,6 +25,7 @@ def clean_output(filename):
     df = df.replace(regex, "")
     df.to_csv("./hand_in/" + filename + "_cleaned.csv", sep=",", index=False)
 
+# approach with GPT 2 which we tried
 def text_generation(input):
     prompt = "Tweet: " + input
     tokenizer = GPT2Tokenizer.from_pretrained("openai-community/gpt2-large")
@@ -33,20 +33,22 @@ def text_generation(input):
 
     inputs = tokenizer.encode(prompt, return_tensors='pt')
 
-    logits_processor = LogitsProcessorList([
+    logits_setup = LogitsProcessorList([
         MinLengthLogitsProcessor(5, eos_token_id=tokenizer.eos_token_id),
         TemperatureLogitsWarper(temperature=0.8),
     ])
 
-    outputs = model.generate(inputs, max_length=150, do_sample=True, early_stopping=True,
-                             num_return_sequences=1,  logits_processor=logits_processor,top_p=0.98,
-                             top_k=50)
-    text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    gpt_outputs = model.generate(inputs, max_length=150, do_sample=True, early_stopping=True,
+                             num_return_sequences=1,  logits_processor=logits_setup,top_p=0.98,top_k=50)
+    generated_text = tokenizer.decode(gpt_outputs[0], skip_special_tokens=True)
 
-    if text.startswith(prompt):
-        text = text[len(prompt):].strip()
-    return text
+    # clean the prompt from input
+    if generated_text.startswith(prompt):
+        generated_text = generated_text[len(prompt):].strip()
 
+    return generated_text
+
+# text generation with LLM
 def text_chat_generation(input, person):
     llm = Llama(model_path="../model/llama-2-7b-chat.Q8_0.gguf", n_ctx=0, n_gpu_layers=32)
 
@@ -56,8 +58,10 @@ def text_chat_generation(input, person):
     
     output = llm(prompt, max_tokens=2048, temperature=1.0)
     output_text = output["choices"][0]["text"]
+
     return output_text
 
+# text style transfer with LLM
 def text_style_change(input, style):
     person = style
     llm = Llama(model_path="../model/llama-2-7b-chat.Q8_0.gguf", n_ctx=0, n_gpu_layers=32)
@@ -68,9 +72,10 @@ def text_style_change(input, style):
 
     output = llm(prompt, max_tokens=2048)
     output_text = output["choices"][0]["text"]
+
     return output_text
 
-
+# the pipeline for text generation/text style transfer
 def pipeline():
     file = open('./data/initial_tweet_musk.txt', 'r')
 

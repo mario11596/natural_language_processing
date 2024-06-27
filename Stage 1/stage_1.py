@@ -9,6 +9,7 @@ from nltk.tokenize import word_tokenize
 from llama_cpp import Llama
 _RE_COMBINE_WHITESPACE = re.compile(r"\s+")
 
+# clean a text
 def text_cleaner(text):
     newString = text.lower()
     newString = re.sub(r"'s\b", "", newString)
@@ -16,9 +17,10 @@ def text_cleaner(text):
 
     return newString
 
+# text generation using 2 n-gram
 def text_generation():
     if os.path.exists('data_stage_1_new_file.txt'):
-        # Delete the file
+
         os.remove('data_stage_1_new_file.txt')
         print(f"The file data_stage_1_new_file.txt has been deleted.")
     else:
@@ -29,36 +31,35 @@ def text_generation():
     file.close()
 
     clean_text = text_cleaner(contents)
-
     tokens = nltk.word_tokenize(clean_text)
-    print(len(tokens))
 
     ngrams = {}
-    n = 2
+    num_gram = 2
     sentences_more = True
     number_of_new_words = 0
 
-    # Construct the n-grams
-    for i in range(len(tokens) - n):
-        gram = ' '.join(tokens[i:i + n])
-        if gram not in ngrams.keys():
-            ngrams[gram] = []
-        ngrams[gram].append(tokens[i + n])
+    for i in range(len(tokens) - num_gram):
+        current_gram = ' '.join(tokens[i:i + num_gram])
+
+        if current_gram not in ngrams.keys():
+            ngrams[current_gram] = []
+        ngrams[num_gram].append(tokens[i + num_gram])
 
     while sentences_more:
         number_of_word = random.randint(10, 30)
-        number = random.randint(1, len(tokens) - n)
-        curr_sequence = ' '.join(tokens[number:number + n])
+        number = random.randint(1, len(tokens) - num_gram)
+        curr_sequence = ' '.join(tokens[number:number + num_gram])
         output = curr_sequence
 
         for i in range(number_of_word):
             if curr_sequence not in ngrams.keys():
                 break
+
             possible_words = ngrams[curr_sequence]
             next_word = random.choice(possible_words)
             output += ' ' + next_word
             rwords = nltk.word_tokenize(output)
-            curr_sequence = ' '.join(rwords[len(rwords) - n:len(rwords)])
+            curr_sequence = ' '.join(rwords[len(rwords) - num_gram:len(rwords)])
 
         number_of_new_words = number_of_word + number_of_new_words
 
@@ -69,6 +70,7 @@ def text_generation():
             sentences_more = False
     return
 
+# another approach which we tried
 def text_generation_llm():
     if os.path.exists('data_stage_1_new_file_llm.txt'):
         # Delete the file
@@ -99,6 +101,7 @@ def text_generation_llm():
     
     return
 
+# text style trasnfer using LLM
 def text_style_change():
     if os.path.exists('data_stage_1_new_style.txt'):
         # Delete the file
@@ -131,26 +134,30 @@ def read_file(file_path):
         text = file.read()
     return text
 
+# ROGUE evaluation
 def Rouge(ground_true, generated_text):
-    rogue_scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
+    rogue_init = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
 
-    all_scores = rogue_scorer.score(ground_true, generated_text)
+    all_scores = rogue_init.score(ground_true, generated_text)
 
-    print("ROUGE-1:")
-    print(f"Precision: {round(all_scores['rouge1'].precision, 5)}")
-    print(f"Recall: {round(all_scores['rouge1'].recall, 5)}")
-    print(f"F1 Score: {round(all_scores['rouge1'].fmeasure, 5)}")
+    print("ROUGE-1 results ")
+    print(f"Precision score: {round(all_scores['rouge1'].precision, 5)}")
+    print(f"Recall score: {round(all_scores['rouge1'].recall, 5)}")
+    print(f"F1 score: {round(all_scores['rouge1'].fmeasure, 5)}")
 
-    print("\nROUGE-2:")
-    print(f"Precision: {round(all_scores['rouge2'].precision, 5)}")
-    print(f"Recall: {round(all_scores['rouge2'].recall, 5)}")
-    print(f"F1 Score: {round(all_scores['rouge2'].fmeasure, 5)}")
+    print("\nROUGE-2 result")
+    print(f"Precision score: {round(all_scores['rouge2'].precision, 5)}")
+    print(f"Recall score: {round(all_scores['rouge2'].recall, 5)}")
+    print(f"F1 score: {round(all_scores['rouge2'].fmeasure, 5)}")
 
-    print("\nROUGE-L:")
-    print(f"Precision: {round(all_scores['rougeL'].precision, 5)}")
-    print(f"Recall: {round(all_scores['rougeL'].recall, 5)}")
-    print(f"F1 Score: {round(all_scores['rougeL'].fmeasure, 5)}")
+    print("\nROUGE-L results ")
+    print(f"Precision score: {round(all_scores['rougeL'].precision, 5)}")
+    print(f"Recall score: {round(all_scores['rougeL'].recall, 5)}")
+    print(f"F1 score: {round(all_scores['rougeL'].fmeasure, 5)}")
 
+    return
+
+# BLEU evaluation
 def Bleu(ground_true, generated_text):
     ground_true = word_tokenize(ground_true.lower())
     generated_text = word_tokenize(generated_text.lower())
@@ -162,27 +169,25 @@ def Bleu(ground_true, generated_text):
 
 def text_evaluation():
     ground_true = read_file('data_stage_1.txt')
-    generated_text = read_file('./hand_in/group16_stage1_generation_nollm.txt')
-    style_text = read_file('./hand_in/group16_stage1_style_nollm.txt')
-
-    #ground_true_clean = text_cleaner(ground_true)
+    generated_text = read_file('hand_in/group16_stage1_generation.txt')
+    style_text = read_file('hand_in/group16_stage1_style.txt')
 
     print("Evaluation for text generation!")
     Rouge(ground_true, generated_text)
     Bleu(ground_true, generated_text)
 
-    print("Evaluation for style transfer!")
+    print("Evaluation for text style transfer!")
     Rouge(ground_true, style_text)
     Bleu(ground_true, style_text)
 
 
+# number of tokens
 def statistics_of_dataset():
     with open('data_stage_1.txt', 'r') as file:
         contents = file.read()
     file.close()
 
     tokens_text = word_tokenize(contents.lower())
-
     filtered_tokens = [token for token in tokens_text if token.isalpha()]
 
     number_of_tokens = len(filtered_tokens)
@@ -193,10 +198,13 @@ def statistics_of_dataset():
 
 def main():
     text_generation()
-    text_generation_llm()
     text_style_change()
+
     statistics_of_dataset()
     text_evaluation()
+
+    # this is another approach which we tried
+    # text_generation_llm()
 
 if __name__ == '__main__':
     main()

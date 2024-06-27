@@ -36,7 +36,7 @@ def style_cleaner(text):
 
 def read_content(read_path, write_path):
     if os.path.exists(write_path):
-        # Delete the file
+
         os.remove(write_path)
         print(f"The file {write_path} has been deleted.")
     else:
@@ -46,6 +46,7 @@ def read_content(read_path, write_path):
         content = file.read()
     return content
 
+# HidDen Markov Model for text generation
 def train_hmm_model(tokens, components=2):
     token_dict = {token: idx for idx, token in enumerate(set(tokens))}
     idx_dict = {idx: token for token, idx in token_dict.items()}
@@ -58,6 +59,7 @@ def train_hmm_model(tokens, components=2):
     
     return idx_dict, model
 
+# text generation with LLM which we tried
 def text_generation(samples=260):
     contents = {}
     contents["kogler"] = read_content('data_stage2_1_kogler.txt', 'data_stage_2_generation1.txt')
@@ -80,6 +82,7 @@ def text_generation(samples=260):
 
     return
 
+# text style transfer with LLM
 def text_style_change():
     contents = {}
     contents["Werner Kogler"] = read_content('data_stage_2_generation2.txt', 'data_stage_2_new_style1.txt')
@@ -91,8 +94,10 @@ def text_style_change():
     for iter,text_idx in enumerate(contents):
         #system = "You are an Austrian politician {text_idx}. "
         system = f"Du bist der österreichische Politiker {text_idx}."
+
         #question = "Question: Can you repeat the following text but in german and in the text-style of {text_idx}. Write at least 2000 words without emojis: " + contents1[-1800:]
         question = f"Frage: Kannst du den folgenden Text im stil von {text_idx} wiedergeben. Schreibe bitte mindestens 300 Wörter ohne emojis zu benutzen: " + contents[text_idx][-1800:]
+
         prompt = f"""<s>[INST] <<SYS>>{system}<</SYS>>{question} [/INST]"""
         output = llm(prompt, max_tokens=2048)
         output_text = output["choices"][0]["text"]
@@ -109,26 +114,30 @@ def read_file(file_path):
         text = file.read()
     return text
 
+# ROGUE evaluation
 def Rouge(ground_true, generated_text):
-    rogue_scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
+    rogue_init = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
 
-    all_scores = rogue_scorer.score(ground_true, generated_text)
+    all_scores = rogue_init.score(ground_true, generated_text)
 
-    print("ROUGE-1:")
-    print(f"Precision: {round(all_scores['rouge1'].precision, 5)}")
-    print(f"Recall: {round(all_scores['rouge1'].recall, 5)}")
-    print(f"F1 Score: {round(all_scores['rouge1'].fmeasure, 5)}")
+    print("ROUGE-1 results ")
+    print(f"Precision score: {round(all_scores['rouge1'].precision, 5)}")
+    print(f"Recall score: {round(all_scores['rouge1'].recall, 5)}")
+    print(f"F1 score: {round(all_scores['rouge1'].fmeasure, 5)}")
 
-    print("\nROUGE-2:")
-    print(f"Precision: {round(all_scores['rouge2'].precision, 5)}")
-    print(f"Recall: {round(all_scores['rouge2'].recall, 5)}")
-    print(f"F1 Score: {round(all_scores['rouge2'].fmeasure, 5)}")
+    print("\nROUGE-2 result")
+    print(f"Precision score: {round(all_scores['rouge2'].precision, 5)}")
+    print(f"Recall score: {round(all_scores['rouge2'].recall, 5)}")
+    print(f"F1 score: {round(all_scores['rouge2'].fmeasure, 5)}")
 
-    print("\nROUGE-L:")
-    print(f"Precision: {round(all_scores['rougeL'].precision, 5)}")
-    print(f"Recall: {round(all_scores['rougeL'].recall, 5)}")
-    print(f"F1 Score: {round(all_scores['rougeL'].fmeasure, 5)}")
+    print("\nROUGE-L results ")
+    print(f"Precision score: {round(all_scores['rougeL'].precision, 5)}")
+    print(f"Recall score: {round(all_scores['rougeL'].recall, 5)}")
+    print(f"F1 score: {round(all_scores['rougeL'].fmeasure, 5)}")
 
+    return
+
+# BLEU evaluation
 def Bleu(ground_true, generated_text):
     ground_true = word_tokenize(ground_true.lower())
     generated_text = word_tokenize(generated_text.lower())
@@ -197,6 +206,7 @@ def statistics_of_dataset():
 def main():
     text_generation(260)
     text_style_change()
+
     statistics_of_dataset()
     text_evaluation()
 
