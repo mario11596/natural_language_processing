@@ -97,4 +97,6 @@ def pipeline():
 
 if __name__ == '__main__':
     pipeline()
+
+    # additional option
     #clean_output("output")
